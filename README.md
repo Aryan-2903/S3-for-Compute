@@ -1,8 +1,8 @@
 # S3 for Compute - Infinitely Scalable Serverless Platform
 
-A hackathon MVP demonstrating a serverless compute platform where developers can upload JavaScript functions and the system automatically handles execution, scaling, retries, and monitoring.
+E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where developers can upload JavaScript functions and the system automatically handles execution, scaling, retries, and monitoring.
 
-## 🚀 Features
+##  Features
 
 ### Core Functionality
 - **Function Upload & Management**: Upload JavaScript functions with metadata
@@ -19,7 +19,7 @@ A hackathon MVP demonstrating a serverless compute platform where developers can
 - **Responsive UI**: Modern React interface with TailwindCSS
 - **Charts & Visualizations**: Interactive charts showing scaling and execution metrics
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 ### Backend
 - **Node.js/Express.js**: REST API server
@@ -33,7 +33,7 @@ A hackathon MVP demonstrating a serverless compute platform where developers can
 - **Recharts**: Data visualization
 - **Lucide React**: Icons
 
-## 📦 Installation
+##  Installation
 
 ### Prerequisites
 - Node.js (v14 or higher)
@@ -88,7 +88,7 @@ A hackathon MVP demonstrating a serverless compute platform where developers can
    - Backend API: http://localhost:5000
    - WebSocket: ws://localhost:5000
 
-## 🎯 Usage
+##  Usage
 
 ### 1. Upload Functions
 - Navigate to the Functions page
@@ -111,7 +111,7 @@ A hackathon MVP demonstrating a serverless compute platform where developers can
 - Run concurrent requests to trigger auto-scaling
 - Observe scaling events in real-time
 
-## 📊 Sample Functions
+##  Sample Functions
 
 The platform includes several pre-built sample functions:
 
@@ -120,7 +120,7 @@ The platform includes several pre-built sample functions:
 3. **Array Sum**: Sum all numbers in an array
 4. **Prime Checker**: Check if a number is prime
 
-## 🔧 API Endpoints
+##  API Endpoints
 
 ### Functions
 - `POST /api/functions` - Create function
@@ -139,7 +139,7 @@ The platform includes several pre-built sample functions:
 ### WebSocket
 - `ws://localhost:5000` - Real-time updates
 
-## 🏗 Architecture
+##  Architecture
 
 ### Database Schema
 
@@ -191,7 +191,7 @@ The platform includes several pre-built sample functions:
 - **Max Instances**: 10 (configurable)
 - **Retry Logic**: Up to 3 retries with exponential backoff
 
-## 🧪 Testing
+##  Testing
 
 ### Load Testing
 1. Go to the Monitoring page
@@ -207,7 +207,7 @@ The platform includes several pre-built sample functions:
 3. Monitor the execution logs
 4. Check scaling behavior in the monitoring dashboard
 
-## 🚀 Deployment
+##  Deployment
 
 ### Production Setup
 1. Set `NODE_ENV=production`
@@ -220,36 +220,13 @@ The platform includes several pre-built sample functions:
 - `NODE_ENV`: Environment (development/production)
 - `PORT`: Server port (default: 5000)
 
-## 🔮 Future Enhancements
+##  Future Enhancements
 
 - **Authentication**: User management and function isolation
-- **Cost Simulation**: Resource usage tracking and billing
 - **Advanced Scaling**: More sophisticated scaling algorithms
 - **Function Versioning**: Version control for functions
 - **API Gateway**: Rate limiting and authentication
 - **Container Support**: Docker-based function execution
 - **Metrics Export**: Integration with monitoring tools
 
-## 🤝 Contributing
 
-This is a hackathon project, but contributions are welcome! Please feel free to:
-- Report bugs
-- Suggest features
-- Submit pull requests
-- Improve documentation
-
-## 📄 License
-
-MIT License - see LICENSE file for details
-
-## 🎉 Demo
-
-To see the platform in action:
-1. Start the application
-2. Upload a sample function
-3. Run the load tester
-4. Watch the scaling events in real-time!
-
----
-
-**Built with ❤️ for the hackathon** - A demonstration of modern serverless architecture principles.

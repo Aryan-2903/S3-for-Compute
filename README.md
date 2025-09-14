@@ -10,7 +10,7 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 - **Intelligent Auto-Scaling**: Dynamic scaling based on execution queue length (scale up at 5+ pending, scale down at <2 pending)
 - **Fault Tolerance**: Automatic retries with exponential backoff (2s, 4s, 8s delays)
 - **Real-time Monitoring**: Live metrics and scaling events via WebSocket
-- **Load Testing**: Built-in load testing to demonstrate scaling behavior
+- **Load Testing**: Built-in load testing with enhanced cost estimation UI to demonstrate scaling behavior
 - **Cost Monitoring**: Comprehensive cost tracking and analysis with pricing tiers
 
 ### Technical Features

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Cpu, BarChart3, FunctionSquare, DollarSign } from 'lucide-react';
+import { Cpu, BarChart3, FunctionSquare, CreditCard } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
@@ -9,7 +9,7 @@ const Navbar = () => {
     { path: '/', label: 'Dashboard', icon: BarChart3 },
     { path: '/functions', label: 'Functions', icon: FunctionSquare },
     { path: '/monitoring', label: 'Monitoring', icon: Cpu },
-    { path: '/costs', label: 'Costs', icon: DollarSign },
+    { path: '/costs', label: 'Costs', icon: CreditCard },
   ];
 
   return (
@@ -32,14 +32,16 @@ const Navbar = () => {
               <Link
                 key={path}
                 to={path}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                   location.pathname === path
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm transform scale-105'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:scale-105'
                 }`}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
-                <span className="whitespace-nowrap">{label}</span>
+                <Icon className={`h-4 w-4 flex-shrink-0 ${
+                  location.pathname === path ? 'text-blue-600' : 'text-gray-500'
+                }`} />
+                <span className="whitespace-nowrap font-medium">{label}</span>
               </Link>
             ))}
           </div>

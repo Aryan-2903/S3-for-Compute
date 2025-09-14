@@ -84,6 +84,9 @@ class ExecutionEngine {
       execution.output = result;
       execution.endTime = new Date();
       
+      // Calculate duration before cost calculation
+      execution.duration = execution.endTime - execution.startTime;
+      
       // Calculate and store cost information
       const costInfo = this.costService.calculateExecutionCost(execution, func);
       execution.cost = costInfo;
@@ -96,6 +99,12 @@ class ExecutionEngine {
         status: 'completed',
         duration: execution.duration,
         output: result,
+        cost: costInfo
+      });
+      
+      console.log('📡 Broadcasted execution_completed event:', {
+        executionId: execution._id,
+        functionId: execution.functionId,
         cost: costInfo
       });
 
@@ -322,11 +331,19 @@ class ExecutionEngine {
   broadcastUpdate(type, data) {
     if (this.wss) {
       const message = JSON.stringify({ type, data, timestamp: new Date() });
+      const clientCount = this.wss.clients.size;
+      let sentCount = 0;
+      
       this.wss.clients.forEach(client => {
         if (client.readyState === 1) { // WebSocket.OPEN
           client.send(message);
+          sentCount++;
         }
       });
+      
+      console.log(`📡 Broadcasting ${type} to ${sentCount}/${clientCount} clients`);
+    } else {
+      console.log('❌ No WebSocket server available for broadcasting');
     }
   }
 

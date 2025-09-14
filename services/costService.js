@@ -91,15 +91,16 @@ class CostService {
     const codeLength = func.code ? func.code.length : 0;
     const timeout = func.config?.timeout || 30000;
     
-    // Simple heuristic based on code complexity and timeout
-    if (codeLength > 5000 || timeout > 60000) {
+    // More realistic heuristic based on code complexity and timeout
+    // Prioritize code length over timeout for tier determination
+    if (codeLength > 10000 || timeout > 120000) {
       return 'enterprise';
-    } else if (codeLength > 2000 || timeout > 30000) {
+    } else if (codeLength > 5000 || timeout > 60000) {
       return 'premium';
-    } else if (codeLength > 500 || timeout > 15000) {
-      return 'standard';
+    } else if (codeLength > 100 || timeout > 60000) {
+      return 'standard'; // Medium code (101-5000 chars) OR long timeout (>60s)
     } else {
-      return 'basic';
+      return 'basic'; // Small code (≤100 chars) and reasonable timeout (≤60s)
     }
   }
 

@@ -46,7 +46,8 @@ const ExecutionChart = ({ data }) => {
               value, 
               name === 'total' ? 'Total' :
               name === 'completed' ? 'Completed' :
-              name === 'failed' ? 'Failed' : 'Pending'
+              name === 'failed' ? 'Failed' : 
+              name === 'pending' ? 'Pending' : name
             ]}
             labelFormatter={(label) => `Time: ${label}`}
           />

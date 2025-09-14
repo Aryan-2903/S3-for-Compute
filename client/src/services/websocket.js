@@ -9,6 +9,7 @@ class WebSocketService {
 
   connect() {
     const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:5000';
+    console.log('🔌 Connecting to WebSocket:', wsUrl);
     
     try {
       this.ws = new WebSocket(wsUrl);
@@ -28,7 +29,9 @@ class WebSocketService {
             ...message.data,
             timestamp: message.timestamp
           };
+          // Emit both the specific event type and a general message event
           this.emit(message.type, dataWithTimestamp);
+          this.emit('message', { type: message.type, data: dataWithTimestamp, timestamp: message.timestamp });
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
         }
@@ -77,6 +80,7 @@ class WebSocketService {
       this.listeners.set(event, []);
     }
     this.listeners.get(event).push(callback);
+    console.log(`👂 Added listener for '${event}' (total: ${this.listeners.get(event).length})`);
   }
 
   off(event, callback) {
@@ -90,6 +94,7 @@ class WebSocketService {
   }
 
   emit(event, data) {
+    console.log(`🔊 Emitting event '${event}' to ${this.listeners.has(event) ? this.listeners.get(event).length : 0} listeners`);
     if (this.listeners.has(event)) {
       this.listeners.get(event).forEach(callback => {
         try {
@@ -98,6 +103,8 @@ class WebSocketService {
           console.error('Error in WebSocket listener:', error);
         }
       });
+    } else {
+      console.log(`⚠️ No listeners for event '${event}'`);
     }
   }
 

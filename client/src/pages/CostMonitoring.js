@@ -1,45 +1,158 @@
-import React, { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Clock, Zap, Calendar, Filter } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { DollarSign, TrendingUp, Clock, Zap, Calendar, RefreshCw } from 'lucide-react';
 import { costsAPI } from '../services/api';
 import CostChart from '../components/CostChart';
 import CostMetricsCard from '../components/CostMetricsCard';
 import CostBreakdown from '../components/CostBreakdown';
+import websocketService from '../services/websocket';
 
 const CostMonitoring = () => {
   const [systemCosts, setSystemCosts] = useState(null);
   const [costTrends, setCostTrends] = useState([]);
   const [costBreakdown, setCostBreakdown] = useState([]);
   const [pricingInfo, setPricingInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
-  });
-  const [granularity, setGranularity] = useState('hour');
+  const [lastUpdate, setLastUpdate] = useState(null);
+
+  // Debug state changes
+  useEffect(() => {
+    console.log('🔄 SystemCosts state changed:', systemCosts);
+  }, [systemCosts]);
 
   useEffect(() => {
-    loadCostData();
-  }, [dateRange, granularity]);
+    console.log('🔄 CostBreakdown state changed:', costBreakdown);
+  }, [costBreakdown]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Yesterday
+    endDate: new Date().toISOString().split('T')[0] // Today
+  });
 
-  const loadCostData = async () => {
+  const loadCostData = useCallback(async (isRefresh = false, customDateRange = null) => {
     try {
-      setLoading(true);
+      // Use provided values or current state
+      const currentDateRange = customDateRange || dateRange;
+      
+      console.log('💰 Loading cost data...', { isRefresh, currentDateRange });
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      
+      console.log('📅 Using date range:', currentDateRange);
+      
       const [systemRes, trendsRes, breakdownRes, pricingRes] = await Promise.all([
-        costsAPI.getSystemCosts(dateRange.startDate, dateRange.endDate),
-        costsAPI.getTrends(dateRange.startDate, dateRange.endDate, granularity),
-        costsAPI.getBreakdown(dateRange.startDate, dateRange.endDate),
+        costsAPI.getSystemCosts(currentDateRange.startDate, currentDateRange.endDate),
+        costsAPI.getTrends(currentDateRange.startDate, currentDateRange.endDate, 'hour'), // Default to hour for trends
+        costsAPI.getBreakdown(currentDateRange.startDate, currentDateRange.endDate),
         costsAPI.getPricing()
       ]);
 
-      setSystemCosts(systemRes.data.data);
+      console.log('📊 Raw API responses:', {
+        systemCosts: systemRes.data.data,
+        trends: trendsRes.data.data.trends,
+        breakdown: breakdownRes.data.data.breakdown
+      });
+
+      // Check if data has actually changed
+      const newSystemCosts = systemRes.data.data;
+      const newCostBreakdown = breakdownRes.data.data.breakdown;
+      
+      console.log('🔄 Data comparison:', {
+        oldSystemCosts: systemCosts,
+        newSystemCosts: newSystemCosts,
+        oldBreakdownCount: costBreakdown.length,
+        newBreakdownCount: newCostBreakdown.length,
+        dataChanged: JSON.stringify(systemCosts) !== JSON.stringify(newSystemCosts)
+      });
+
+      setSystemCosts(newSystemCosts);
       setCostTrends(trendsRes.data.data.trends);
-      setCostBreakdown(breakdownRes.data.data.breakdown);
+      setCostBreakdown(newCostBreakdown);
       setPricingInfo(pricingRes.data.data);
+      setLastUpdate(new Date().toISOString());
+      
+      console.log('📊 Cost data loaded and state updated:', {
+        systemCosts: systemRes.data.data,
+        trendsCount: trendsRes.data.data.trends.length,
+        breakdownCount: breakdownRes.data.data.breakdown.length
+      });
+
     } catch (error) {
       console.error('Error loading cost data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  }, [dateRange, systemCosts, costBreakdown]);
+
+  useEffect(() => {
+    loadCostData();
+  }, [dateRange]);
+
+  // Set up WebSocket listeners for real-time updates
+  const handleExecutionCompleted = useCallback((data) => {
+    console.log('🔄 Execution completed, refreshing cost data:', data);
+    console.log('🔄 Current state before refresh:', {
+      systemCosts,
+      costBreakdown: costBreakdown.length,
+      costTrends: costTrends.length
+    });
+    // Refresh cost data when a new execution completes
+    // Use current state values to avoid stale closure
+    loadCostData(true, dateRange);
+  }, [loadCostData, dateRange, systemCosts, costBreakdown, costTrends]);
+
+  const handleExecutionStarted = useCallback((data) => {
+    console.log('🚀 Execution started:', data);
+  }, []);
+
+  const handleWebSocketConnected = useCallback(() => {
+    console.log('✅ WebSocket connected to cost monitoring');
+  }, []);
+
+  const handleWebSocketDisconnected = useCallback(() => {
+    console.log('❌ WebSocket disconnected from cost monitoring');
+  }, []);
+
+  // Add a general message handler to see all WebSocket messages
+  const handleWebSocketMessage = useCallback((data) => {
+    console.log('📡 WebSocket message received in CostMonitoring:', data);
+  }, []);
+
+  useEffect(() => {
+    // Set up periodic refresh as fallback (every 30 seconds)
+    const refreshInterval = setInterval(() => {
+      console.log('🔄 Periodic refresh triggered');
+      loadCostData(true);
+    }, 30000);
+
+    // Connect to WebSocket
+    websocketService.connect();
+    
+    // Add event listeners
+    websocketService.on('execution_completed', handleExecutionCompleted);
+    websocketService.on('execution_started', handleExecutionStarted);
+    websocketService.on('connected', handleWebSocketConnected);
+    websocketService.on('disconnected', handleWebSocketDisconnected);
+    
+    // Add a catch-all message handler
+    websocketService.on('message', handleWebSocketMessage);
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(refreshInterval);
+      websocketService.off('execution_completed', handleExecutionCompleted);
+      websocketService.off('execution_started', handleExecutionStarted);
+      websocketService.off('connected', handleWebSocketConnected);
+      websocketService.off('disconnected', handleWebSocketDisconnected);
+      websocketService.off('message', handleWebSocketMessage);
+    };
+  }, [handleExecutionCompleted, handleExecutionStarted, handleWebSocketConnected, handleWebSocketDisconnected, handleWebSocketMessage, loadCostData]); // Include all dependencies
+
+  const handleRefresh = () => {
+    loadCostData(true);
   };
 
   const handleDateRangeChange = (field, value) => {
@@ -64,8 +177,21 @@ const CostMonitoring = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Cost Monitoring</h1>
           <p className="text-gray-600 mt-2">Track and analyze your serverless function costs</p>
+          {lastUpdate && (
+            <p className="text-sm text-gray-500 mt-1">
+              Last updated: {new Date(lastUpdate).toLocaleTimeString()}
+            </p>
+          )}
         </div>
         <div className="flex items-center space-x-4">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+          </button>
           <div className="flex items-center space-x-2">
             <Calendar className="h-4 w-4 text-gray-500" />
             <input
@@ -81,18 +207,6 @@ const CostMonitoring = () => {
               onChange={(e) => handleDateRangeChange('endDate', e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-1 text-sm"
             />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4 text-gray-500" />
-            <select
-              value={granularity}
-              onChange={(e) => setGranularity(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-            >
-              <option value="minute">Minute</option>
-              <option value="hour">Hour</option>
-              <option value="day">Day</option>
-            </select>
           </div>
         </div>
       </div>
@@ -142,10 +256,34 @@ const CostMonitoring = () => {
       </div>
 
       {/* Cost Breakdown by Function */}
-      <CostBreakdown
-        breakdown={costBreakdown}
-        title="Cost Breakdown by Function"
-      />
+      <div className="relative">
+        {refreshing && (
+          <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 text-blue-600">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            <span className="text-sm font-medium">Updating...</span>
+          </div>
+        )}
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start space-x-2">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-blue-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-blue-900">Tier Information</h4>
+              <p className="text-sm text-blue-700 mt-1">
+                The tiers shown below are determined by actual function characteristics (code length, timeout, etc.) during execution. 
+                Load testing tier selection is for testing purposes only and doesn't affect actual execution costs.
+              </p>
+            </div>
+          </div>
+        </div>
+        <CostBreakdown
+          breakdown={costBreakdown}
+          title="Cost Breakdown by Function"
+        />
+      </div>
 
       {/* Pricing Information */}
       {pricingInfo && (

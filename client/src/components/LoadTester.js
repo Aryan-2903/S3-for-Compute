@@ -11,6 +11,21 @@ const LoadTester = ({ functions, onTestComplete }) => {
   const [testDuration, setTestDuration] = useState(30); // seconds
   const [costEstimate, setCostEstimate] = useState(null);
 
+  // Determine tier automatically based on function characteristics
+  const determineTier = (func) => {
+    const codeLength = func.code ? func.code.length : 0;
+    const timeout = func.config?.timeout || 30000;
+    
+    // Enterprise: Very large code or very long timeout
+    if (codeLength > 10000 || timeout > 120000) return 'enterprise';
+    // Premium: Large code or long timeout
+    else if (codeLength > 5000 || timeout > 60000) return 'premium';
+    // Standard: Medium code (101-5000 chars) OR long timeout (>60s)
+    else if (codeLength > 100 || timeout > 60000) return 'standard';
+    // Basic: Small code (≤100 chars) and reasonable timeout (≤60s)
+    else return 'basic';
+  };
+
   const runLoadTest = async () => {
     if (!selectedFunction) return;
 
@@ -46,16 +61,25 @@ const LoadTester = ({ functions, onTestComplete }) => {
         results_data.responseTimes.push(duration);
         
         // Calculate cost for this execution (client-side calculation)
-        const calculateCost = (duration) => {
-          // Basic tier pricing: $0.0001 per 100ms
+        const calculateCost = (duration, func) => {
+          // Pricing tiers (per 100ms of execution time)
+          const pricingTiers = {
+            basic: { pricePer100ms: 0.0001, memoryMB: 128, cpuCores: 0.1 },
+            standard: { pricePer100ms: 0.0003, memoryMB: 512, cpuCores: 0.5 },
+            premium: { pricePer100ms: 0.0008, memoryMB: 1024, cpuCores: 1.0 },
+            enterprise: { pricePer100ms: 0.002, memoryMB: 2048, cpuCores: 2.0 }
+          };
+          
+          const tier = determineTier(func);
+          const tierConfig = pricingTiers[tier];
           const durationIn100ms = Math.ceil(duration / 100);
-          const baseCost = durationIn100ms * 0.0001;
+          const baseCost = durationIn100ms * tierConfig.pricePer100ms;
           const coldStartCost = 0.00005; // $0.00005 per cold start
           const dataTransferCost = 0.000001; // Minimal data transfer cost
           
           return {
             totalCost: baseCost + coldStartCost + dataTransferCost,
-            tier: 'basic',
+            tier: tier,
             breakdown: {
               baseCost: baseCost,
               coldStartCost: coldStartCost,
@@ -64,7 +88,9 @@ const LoadTester = ({ functions, onTestComplete }) => {
           };
         };
 
-        const costData = calculateCost(duration);
+        // Get the function object for tier determination
+        const func = functions.find(f => f._id === selectedFunction);
+        const costData = calculateCost(duration, func);
         results_data.costs.push({
           requestId,
           cost: costData,
@@ -149,8 +175,23 @@ const LoadTester = ({ functions, onTestComplete }) => {
       // Estimate cost based on average response time and parameters
       const estimatedRequests = concurrentRequests * (testDuration / 10); // Rough estimate
       const estimatedDuration = 1000; // Assume 1 second average execution time
+      
+      // Get the selected function to determine its tier
+      const func = functions.find(f => f._id === selectedFunction);
+      if (!func) return;
+      
+      // Pricing tiers (per 100ms of execution time)
+      const pricingTiers = {
+        basic: { pricePer100ms: 0.0001, memoryMB: 128, cpuCores: 0.1 },
+        standard: { pricePer100ms: 0.0003, memoryMB: 512, cpuCores: 0.5 },
+        premium: { pricePer100ms: 0.0008, memoryMB: 1024, cpuCores: 1.0 },
+        enterprise: { pricePer100ms: 0.002, memoryMB: 2048, cpuCores: 2.0 }
+      };
+      
+      const tier = determineTier(func);
+      const tierConfig = pricingTiers[tier];
       const durationIn100ms = Math.ceil(estimatedDuration / 100);
-      const baseCost = durationIn100ms * 0.0001;
+      const baseCost = durationIn100ms * tierConfig.pricePer100ms;
       const coldStartCost = 0.00005;
       const dataTransferCost = 0.000001;
       const costPerRequest = baseCost + coldStartCost + dataTransferCost;
@@ -158,10 +199,11 @@ const LoadTester = ({ functions, onTestComplete }) => {
       
       setCostEstimate({
         estimatedRequests: Math.round(estimatedRequests),
-        estimatedCost: parseFloat(estimatedCost.toFixed(6))
+        estimatedCost: parseFloat(estimatedCost.toFixed(6)),
+        tier: tier
       });
     }
-  }, [selectedFunction, concurrentRequests, testDuration]);
+  }, [selectedFunction, concurrentRequests, testDuration, functions]);
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -227,6 +269,7 @@ const LoadTester = ({ functions, onTestComplete }) => {
                 disabled={isRunning}
               />
             </div>
+
           </div>
 
           {/* Cost Estimate */}
@@ -242,7 +285,7 @@ const LoadTester = ({ functions, onTestComplete }) => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                 <div className="bg-white rounded-lg p-4 border border-blue-100">
                   <div className="flex items-center justify-between">
                     <div>
@@ -266,6 +309,18 @@ const LoadTester = ({ functions, onTestComplete }) => {
                     </div>
                   </div>
                 </div>
+
+                <div className="bg-white rounded-lg p-4 border border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Pricing Tier</p>
+                      <p className="text-2xl font-bold text-purple-600">{costEstimate.tier?.toUpperCase()}</p>
+                    </div>
+                    <div className="p-2 bg-purple-50 rounded-lg">
+                      <Zap className="h-5 w-5 text-purple-600" />
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -276,8 +331,8 @@ const LoadTester = ({ functions, onTestComplete }) => {
                     </svg>
                   </div>
                   <p className="text-xs text-amber-700">
-                    <span className="font-medium">Note:</span> This is a rough estimate using Basic tier pricing ($0.0001 per 100ms). 
-                    Actual costs may vary based on execution time and pricing tier.
+                    <span className="font-medium">Note:</span> This is a rough estimate using {costEstimate.tier} tier pricing (automatically determined from function characteristics). 
+                    Actual costs may vary based on execution time.
                   </p>
                 </div>
               </div>

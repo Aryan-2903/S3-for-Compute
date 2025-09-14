@@ -75,7 +75,7 @@ router.get('/function/:functionId', async (req, res) => {
 
     // Default to last 24 hours if no dates provided
     const start = startDate ? new Date(startDate) : new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const end = endDate ? new Date(endDate) : new Date();
+    const end = endDate ? new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000 - 1) : new Date(); // Include entire end date
 
     const costSummary = await costService.calculateFunctionCosts(functionId, start, end);
 
@@ -98,7 +98,7 @@ router.get('/system', async (req, res) => {
 
     // Default to last 24 hours if no dates provided
     const start = startDate ? new Date(startDate) : new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const end = endDate ? new Date(endDate) : new Date();
+    const end = endDate ? new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000 - 1) : new Date(); // Include entire end date
 
     // Get executions and ensure they have cost data
     const executions = await Execution.find({
@@ -241,7 +241,7 @@ router.get('/breakdown', async (req, res) => {
 
     // Default to last 24 hours if no dates provided
     const start = startDate ? new Date(startDate) : new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const end = endDate ? new Date(endDate) : new Date();
+    const end = endDate ? new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000 - 1) : new Date(); // Include entire end date
 
     // Get all completed executions with their functions
     const executions = await Execution.find({

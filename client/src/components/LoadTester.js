@@ -45,25 +45,31 @@ const LoadTester = ({ functions, onTestComplete }) => {
         results_data.completed++;
         results_data.responseTimes.push(duration);
         
-        // Estimate cost for this execution
-        try {
-          const costResponse = await costsAPI.estimateCost(selectedFunction, { 
-            testId: requestId 
-          }, duration);
-          results_data.costs.push({
-            requestId,
-            cost: costResponse.data.data,
-            duration
-          });
-        } catch (costError) {
-          console.warn('Cost estimation failed:', costError);
-          // Use default cost estimation if API fails
-          results_data.costs.push({
-            requestId,
-            cost: { totalCost: 0.0001 }, // Default minimal cost
-            duration
-          });
-        }
+        // Calculate cost for this execution (client-side calculation)
+        const calculateCost = (duration) => {
+          // Basic tier pricing: $0.0001 per 100ms
+          const durationIn100ms = Math.ceil(duration / 100);
+          const baseCost = durationIn100ms * 0.0001;
+          const coldStartCost = 0.00005; // $0.00005 per cold start
+          const dataTransferCost = 0.000001; // Minimal data transfer cost
+          
+          return {
+            totalCost: baseCost + coldStartCost + dataTransferCost,
+            tier: 'basic',
+            breakdown: {
+              baseCost: baseCost,
+              coldStartCost: coldStartCost,
+              dataTransferCost: dataTransferCost
+            }
+          };
+        };
+
+        const costData = calculateCost(duration);
+        results_data.costs.push({
+          requestId,
+          cost: costData,
+          duration
+        });
       } catch (error) {
         results_data.failed++;
         results_data.errors.push({
@@ -142,7 +148,14 @@ const LoadTester = ({ functions, onTestComplete }) => {
     if (selectedFunction && concurrentRequests && testDuration) {
       // Estimate cost based on average response time and parameters
       const estimatedRequests = concurrentRequests * (testDuration / 10); // Rough estimate
-      const estimatedCost = estimatedRequests * 0.0001; // Basic tier cost estimate
+      const estimatedDuration = 1000; // Assume 1 second average execution time
+      const durationIn100ms = Math.ceil(estimatedDuration / 100);
+      const baseCost = durationIn100ms * 0.0001;
+      const coldStartCost = 0.00005;
+      const dataTransferCost = 0.000001;
+      const costPerRequest = baseCost + coldStartCost + dataTransferCost;
+      const estimatedCost = estimatedRequests * costPerRequest;
+      
       setCostEstimate({
         estimatedRequests: Math.round(estimatedRequests),
         estimatedCost: parseFloat(estimatedCost.toFixed(6))
@@ -234,7 +247,7 @@ const LoadTester = ({ functions, onTestComplete }) => {
                 </div>
               </div>
               <p className="text-xs text-blue-600 mt-2">
-                * This is a rough estimate. Actual costs may vary based on execution time and pricing tier.
+                * This is a rough estimate using Basic tier pricing ($0.0001 per 100ms). Actual costs may vary based on execution time and pricing tier.
               </p>
             </div>
           )}

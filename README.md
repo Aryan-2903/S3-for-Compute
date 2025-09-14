@@ -20,7 +20,7 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 - **Responsive UI**: Modern React interface with TailwindCSS
 - **Charts & Visualizations**: Interactive charts showing scaling, execution metrics, and cost trends
 - **Multi-tier Pricing**: Basic, Standard, Premium, and Enterprise pricing tiers
-- **Scaling Events Timeline**: Visual timeline of all scaling events with reasons
+- **Scaling Events Timeline**: Scrollable visual timeline of all scaling events with reasons
 
 ##  Tech Stack
 
@@ -312,6 +312,7 @@ taskkill /F /PID <PID_NUMBER>
 # Or change port in .env file
 PORT=5001
 ```
+
 
 
 

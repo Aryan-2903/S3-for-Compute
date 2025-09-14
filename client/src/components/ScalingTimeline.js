@@ -14,7 +14,7 @@ const ScalingTimeline = ({ events }) => {
 
   if (!events || events.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-gray-500">
+      <div className="flex items-center justify-center h-80 text-gray-500">
         <div className="text-center">
           <div className="text-2xl mb-2">📊</div>
           <div>No scaling events yet</div>
@@ -24,8 +24,9 @@ const ScalingTimeline = ({ events }) => {
   }
 
   return (
-    <div className="space-y-4">
-      {events.map((event, index) => (
+    <div className="relative h-80 max-h-96 overflow-y-auto pr-2 border border-gray-200 rounded-lg bg-gray-50 scrollbar-thin">
+      <div className="space-y-4 p-4">
+        {events.map((event, index) => (
         <div key={event._id || index} className="flex items-start space-x-4">
           <div className="flex-shrink-0">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -65,7 +66,10 @@ const ScalingTimeline = ({ events }) => {
             </div>
           </div>
         </div>
-      ))}
+        ))}
+      </div>
+      {/* Fade effect at bottom to indicate more content */}
+      <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none"></div>
     </div>
   );
 };

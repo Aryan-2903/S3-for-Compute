@@ -4,7 +4,7 @@ const scalingEventSchema = new mongoose.Schema({
   functionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Function',
-    required: true
+    required: false
   },
   action: {
     type: String,

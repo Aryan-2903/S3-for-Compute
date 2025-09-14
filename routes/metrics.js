@@ -43,15 +43,13 @@ router.get('/', async (req, res) => {
       timestamp: { $gte: oneHourAgo }
     }).sort({ timestamp: -1 });
 
-    // Calculate current instance count (simulated)
+    // Calculate current instance count from latest scaling event
     let currentInstances = 1; // Base instance
-    recentScalingEvents.forEach(event => {
-      if (event.action === 'scale_up') {
-        currentInstances += 1;
-      } else if (event.action === 'scale_down' && currentInstances > 1) {
-        currentInstances -= 1;
-      }
-    });
+    if (recentScalingEvents.length > 0) {
+      // Get the latest scaling event to determine current instance count
+      const latestEvent = recentScalingEvents[0]; // Already sorted by timestamp desc
+      currentInstances = latestEvent.instanceCount;
+    }
 
     // Get average execution time
     const avgExecutionTime = await Execution.aggregate([
@@ -137,7 +135,7 @@ router.get('/scaling/history', async (req, res) => {
 
     const scalingEvents = await ScalingEvent.find({
       timestamp: { $gte: startTime }
-    }).sort({ timestamp: 1 });
+    }).sort({ timestamp: -1 }); // Sort by newest first for timeline
 
     res.json(scalingEvents);
   } catch (error) {

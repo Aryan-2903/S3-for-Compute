@@ -5,19 +5,22 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 ##  Features
 
 ### Core Functionality
-- **Function Upload & Management**: Upload JavaScript functions with metadata
-- **Automatic Execution**: Execute functions with input parameters
-- **Intelligent Scaling**: Simulated auto-scaling based on queue length
-- **Fault Tolerance**: Automatic retries with exponential backoff
+- **Function Upload & Management**: Upload JavaScript functions with metadata and version control
+- **Automatic Execution**: Execute functions with input parameters in isolated worker threads
+- **Intelligent Auto-Scaling**: Dynamic scaling based on execution queue length (scale up at 5+ pending, scale down at <2 pending)
+- **Fault Tolerance**: Automatic retries with exponential backoff (2s, 4s, 8s delays)
 - **Real-time Monitoring**: Live metrics and scaling events via WebSocket
 - **Load Testing**: Built-in load testing to demonstrate scaling behavior
+- **Cost Monitoring**: Comprehensive cost tracking and analysis with pricing tiers
 
 ### Technical Features
 - **Worker Threads**: Safe function execution in isolated worker threads
-- **MongoDB Storage**: Persistent storage for functions, executions, and scaling events
+- **MongoDB Storage**: Persistent storage for functions, executions, scaling events, and costs
 - **WebSocket Updates**: Real-time monitoring dashboard updates
 - **Responsive UI**: Modern React interface with TailwindCSS
-- **Charts & Visualizations**: Interactive charts showing scaling and execution metrics
+- **Charts & Visualizations**: Interactive charts showing scaling, execution metrics, and cost trends
+- **Multi-tier Pricing**: Basic, Standard, Premium, and Enterprise pricing tiers
+- **Scaling Events Timeline**: Visual timeline of all scaling events with reasons
 
 ##  Tech Stack
 
@@ -105,11 +108,20 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 - Visit the Monitoring page for real-time metrics
 - View scaling events and execution history
 - Use the Load Tester to trigger scaling behavior
+- Monitor real-time scaling events in the timeline
 
-### 4. Load Testing
+### 4. Cost Analysis
+- Visit the Cost Monitoring page for detailed cost breakdown
+- View cost trends and pricing tier information
+- Analyze function-specific and system-wide costs
+- Track cost optimization opportunities
+
+### 5. Load Testing
 - Select a function and configure test parameters
-- Run concurrent requests to trigger auto-scaling
+- Run concurrent requests (up to 100 concurrent)
+- Set test duration (10-300 seconds)
 - Observe scaling events in real-time
+- Monitor cost impact of load testing
 
 ##  Sample Functions
 
@@ -119,6 +131,31 @@ The platform includes several pre-built sample functions:
 2. **String Reverser**: Reverse input text
 3. **Array Sum**: Sum all numbers in an array
 4. **Prime Checker**: Check if a number is prime
+
+##  Demo Instructions
+
+### Quick Start Demo
+1. **Start the Platform**: Run `npm start` to start the server
+2. **Access the UI**: Open http://localhost:3000 in your browser
+3. **Upload a Function**: Go to Functions page and upload a sample function
+4. **Execute Functions**: Click "Run" to execute functions and see real-time updates
+5. **Monitor Scaling**: Visit Monitoring page to see scaling events and metrics
+6. **Load Test**: Use the Load Tester to trigger auto-scaling behavior
+7. **Cost Analysis**: Check Cost Monitoring page for detailed cost breakdown
+
+### Scaling Demo
+1. Go to Monitoring page
+2. Use Load Tester with 20+ concurrent requests
+3. Watch the Instance Scaling chart show scaling events
+4. Observe the Scaling Events Timeline for detailed scaling history
+5. Monitor real-time updates in the dashboard
+
+### Cost Analysis Demo
+1. Execute several functions
+2. Go to Cost Monitoring page
+3. View cost trends and breakdown
+4. Analyze pricing tier information
+5. Track system-wide cost metrics
 
 ##  API Endpoints
 
@@ -132,12 +169,21 @@ The platform includes several pre-built sample functions:
 - `DELETE /api/functions/:id` - Delete function
 
 ### Metrics
-- `GET /api/metrics` - Get system metrics
+- `GET /api/metrics` - Get system metrics and overview
 - `GET /api/metrics/executions/history` - Get execution history
-- `GET /api/metrics/scaling/history` - Get scaling events
+- `GET /api/metrics/scaling/history` - Get scaling events timeline
+
+### Costs
+- `GET /api/costs/pricing` - Get pricing tiers information
+- `POST /api/costs/estimate` - Estimate function execution cost
+- `GET /api/costs/function/:id` - Get function-specific costs
+- `GET /api/costs/system` - Get system-wide cost analysis
+- `GET /api/costs/executions` - Get execution cost details
+- `GET /api/costs/trends` - Get cost trends over time
+- `GET /api/costs/breakdown` - Get detailed cost breakdown
 
 ### WebSocket
-- `ws://localhost:5000` - Real-time updates
+- `ws://localhost:5000` - Real-time updates for scaling events, executions, and monitoring
 
 ##  Architecture
 
@@ -177,7 +223,7 @@ The platform includes several pre-built sample functions:
 ```javascript
 {
   _id: ObjectId,
-  functionId: ObjectId,
+  functionId: ObjectId, // Optional - null for system-wide scaling
   action: String, // 'scale_up' | 'scale_down'
   instanceCount: Number,
   timestamp: Date,
@@ -185,11 +231,34 @@ The platform includes several pre-built sample functions:
 }
 ```
 
+**Costs Collection**
+```javascript
+{
+  _id: ObjectId,
+  executionId: ObjectId,
+  functionId: ObjectId,
+  tier: String, // 'basic' | 'standard' | 'premium' | 'enterprise'
+  baseCost: Number,
+  coldStartCost: Number,
+  retryCost: Number,
+  dataTransferCost: Number,
+  totalCost: Number,
+  duration: Number,
+  resourceUsage: {
+    memoryMB: Number,
+    cpuCores: Number
+  },
+  timestamp: Date
+}
+```
+
 ### Scaling Logic
-- **Scale Up**: When >10 executions are queued
-- **Scale Down**: When <3 executions for 30 seconds
+- **Scale Up**: When >5 executions are queued (optimized for better responsiveness)
+- **Scale Down**: When <2 executions for 30 seconds
 - **Max Instances**: 10 (configurable)
-- **Retry Logic**: Up to 3 retries with exponential backoff
+- **Min Instances**: 1 (always maintains base capacity)
+- **Retry Logic**: Up to 3 retries with exponential backoff (2s, 4s, 8s)
+- **Auto-initialization**: Creates sample scaling events on first startup for demonstration
 
 ##  Testing
 
@@ -220,13 +289,23 @@ The platform includes several pre-built sample functions:
 - `NODE_ENV`: Environment (development/production)
 - `PORT`: Server port (default: 5000)
 
-##  Future Enhancements
+## 🔧 Troubleshooting
 
-- **Authentication**: User management and function isolation
-- **Advanced Scaling**: More sophisticated scaling algorithms
-- **Function Versioning**: Version control for functions
-- **API Gateway**: Rate limiting and authentication
-- **Container Support**: Docker-based function execution
-- **Metrics Export**: Integration with monitoring tools
+### Common Issues
+
+**Port Already in Use Error**
+```bash
+Error: listen EADDRINUSE: address already in use :::5000
+```
+**Solution**: Kill the existing process or change the port
+```bash
+# Find and kill process using port 5000
+netstat -ano | findstr :5000
+taskkill /F /PID <PID_NUMBER>
+
+# Or change port in .env file
+PORT=5001
+```
+
 
 

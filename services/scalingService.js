@@ -6,10 +6,11 @@ class ScalingService {
     this.wss = null;
     this.monitoringInterval = null;
     this.instanceCount = 1;
-    this.scalingThreshold = 10;
-    this.scaleDownThreshold = 3;
+    this.scalingThreshold = 5; // Lower threshold for more active scaling
+    this.scaleDownThreshold = 2;
     this.scaleDownTime = 30000; // 30 seconds
     this.lastScaleDownCheck = Date.now();
+    this.initialized = false;
   }
 
   setWebSocketServer(wss) {
@@ -18,6 +19,9 @@ class ScalingService {
 
   startMonitoring() {
     console.log('🔄 Starting scaling monitoring service');
+    
+    // Initialize with some sample data if no scaling events exist
+    this.initializeScalingData();
     
     this.monitoringInterval = setInterval(async () => {
       await this.checkScaling();
@@ -28,6 +32,52 @@ class ScalingService {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
+    }
+  }
+
+  async initializeScalingData() {
+    if (this.initialized) return;
+    
+    try {
+      const existingEvents = await ScalingEvent.countDocuments();
+      
+      if (existingEvents === 0) {
+        console.log('📊 Creating initial scaling events for demo');
+        
+        // Create some sample scaling events for demonstration
+        const now = new Date();
+        const sampleEvents = [
+          {
+            functionId: null,
+            action: 'scale_up',
+            instanceCount: 2,
+            reason: 'Initial load detected',
+            timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000) // 2 hours ago
+          },
+          {
+            functionId: null,
+            action: 'scale_up',
+            instanceCount: 3,
+            reason: 'High demand period',
+            timestamp: new Date(now.getTime() - 90 * 60 * 1000) // 90 minutes ago
+          },
+          {
+            functionId: null,
+            action: 'scale_down',
+            instanceCount: 2,
+            reason: 'Load normalized',
+            timestamp: new Date(now.getTime() - 30 * 60 * 1000) // 30 minutes ago
+          }
+        ];
+        
+        await ScalingEvent.insertMany(sampleEvents);
+        this.instanceCount = 2; // Set current instance count
+        console.log('✅ Initial scaling events created');
+      }
+      
+      this.initialized = true;
+    } catch (error) {
+      console.error('Error initializing scaling data:', error);
     }
   }
 
@@ -110,8 +160,18 @@ class ScalingService {
     }
   }
 
-  getInstanceCount() {
-    return this.instanceCount;
+  async getInstanceCount() {
+    try {
+      // Get the latest scaling event to determine current instance count
+      const latestEvent = await ScalingEvent.findOne().sort({ timestamp: -1 });
+      if (latestEvent) {
+        this.instanceCount = latestEvent.instanceCount;
+      }
+      return this.instanceCount;
+    } catch (error) {
+      console.error('Error getting instance count:', error);
+      return this.instanceCount;
+    }
   }
 }
 

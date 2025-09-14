@@ -38,8 +38,8 @@ const Navbar = () => {
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Icon className="h-4 w-4" />
-                <span>{label}</span>
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">{label}</span>
               </Link>
             ))}
           </div>

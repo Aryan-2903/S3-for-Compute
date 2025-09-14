@@ -11,7 +11,7 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 - **Fault Tolerance**: Automatic retries with exponential backoff (2s, 4s, 8s delays)
 - **Real-time Monitoring**: Live metrics and scaling events via WebSocket
 - **Load Testing**: Built-in load testing with enhanced cost estimation UI to demonstrate scaling behavior
-- **Cost Monitoring**: Comprehensive cost tracking and analysis with pricing tiers
+- **Cost Monitoring**: Comprehensive cost tracking and analysis with pricing tiers and real-time cost calculation
 
 ### Technical Features
 - **Worker Threads**: Safe function execution in isolated worker threads

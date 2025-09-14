@@ -4,13 +4,11 @@ import { functionsAPI, metricsAPI, costsAPI } from '../services/api';
 import FunctionUpload from '../components/FunctionUpload';
 import FunctionList from '../components/FunctionList';
 import MetricsCard from '../components/MetricsCard';
-import CostChart from '../components/CostChart';
 
 const Dashboard = () => {
   const [functions, setFunctions] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [systemCosts, setSystemCosts] = useState(null);
-  const [costTrends, setCostTrends] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
 
@@ -22,16 +20,14 @@ const Dashboard = () => {
 
   const loadData = async () => {
     try {
-      const [functionsRes, metricsRes, costsRes, trendsRes] = await Promise.all([
+      const [functionsRes, metricsRes, costsRes] = await Promise.all([
         functionsAPI.getAll(),
         metricsAPI.getOverview(),
-        costsAPI.getSystemCosts(),
-        costsAPI.getTrends(undefined, undefined, 'hour')
+        costsAPI.getSystemCosts()
       ]);
       setFunctions(functionsRes.data);
       setMetrics(metricsRes.data);
       setSystemCosts(costsRes.data.data);
-      setCostTrends(trendsRes.data.data.trends);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -129,15 +125,32 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Cost Trends Chart */}
-      {costTrends.length > 0 && (
+      {/* Cost Summary Card */}
+      {systemCosts && (
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Cost Trends (Last 24 Hours)</h2>
-          <CostChart
-            data={costTrends}
-            type="line"
-            height={300}
-          />
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Cost Summary (Last 24 Hours)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">${systemCosts.totalSystemCost.toFixed(4)}</div>
+              <div className="text-sm text-blue-800">Total Cost</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{systemCosts.totalExecutions}</div>
+              <div className="text-sm text-green-800">Total Executions</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">${systemCosts.averageCostPerExecution.toFixed(6)}</div>
+              <div className="text-sm text-purple-800">Avg Cost per Execution</div>
+            </div>
+          </div>
+          <div className="mt-4 text-center">
+            <a 
+              href="/costs" 
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              View detailed cost analysis →
+            </a>
+          </div>
         </div>
       )}
 

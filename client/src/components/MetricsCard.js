@@ -11,13 +11,17 @@ const MetricsCard = ({ title, value, icon: Icon, color = 'blue' }) => {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center">
-        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="h-6 w-6" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+            <Icon className="h-6 w-6" />
+          </div>
+          <div className="ml-4">
+            <p className="text-sm font-medium text-gray-600 leading-tight">{title}</p>
+          </div>
         </div>
-        <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-semibold text-gray-900">{value}</p>
+        <div className="text-right">
+          <p className="text-2xl font-bold text-gray-900 leading-none">{value}</p>
         </div>
       </div>
     </div>

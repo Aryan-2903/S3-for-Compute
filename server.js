@@ -33,11 +33,11 @@ mongoose.connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
-.then(() => console.log('✅ Connected to MongoDB Atlas'))
-.catch((err) => console.error('❌ MongoDB connection error:', err));
+.then(() => console.log(' Connected to MongoDB Atlas'))
+.catch((err) => console.error(' MongoDB connection error:', err));
 
 mongoose.connection.on('error', (err) => {
-    console.error('❌ MongoDB connection error:', err);
+    console.error(' MongoDB connection error:', err);
 });
 
 // ------------------- Routes -------------------
@@ -67,10 +67,10 @@ global.executionEngine = executionEngine;
 
 // WebSocket connection handling
 wss.on('connection', (ws) => {
-    console.log('📡 New WebSocket connection');
+    console.log(' New WebSocket connection');
 
     ws.on('close', () => {
-        console.log('📡 WebSocket connection closed');
+        console.log(' WebSocket connection closed');
     });
 });
 
@@ -83,15 +83,15 @@ scalingService.startMonitoring();
 
 // ------------------- Graceful Shutdown -------------------
 process.on('SIGTERM', () => {
-    console.log('🛑 SIGTERM received, shutting down gracefully');
+    console.log(' SIGTERM received, shutting down gracefully');
     server.close(() => {
-        console.log('✅ Process terminated');
+        console.log(' Process terminated');
         process.exit(0);
     });
 });
 
 // ------------------- Start Server -------------------
 server.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📊 WebSocket server running on ws://localhost:${PORT}`);
+    console.log(` Server running on port ${PORT}`);
+    console.log(` WebSocket server running on ws://localhost:${PORT}`);
 });

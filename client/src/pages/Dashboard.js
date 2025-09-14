@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Plus, Activity, Zap, DollarSign } from 'lucide-react';
+import { Play, Plus, Activity, Zap } from 'lucide-react';
 import { functionsAPI, metricsAPI, costsAPI } from '../services/api';
 import FunctionUpload from '../components/FunctionUpload';
 import FunctionList from '../components/FunctionList';
@@ -89,7 +89,7 @@ const Dashboard = () => {
 
       {/* Metrics Cards */}
       {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricsCard
             title="Active Functions"
             value={metrics.overview.activeFunctions}
@@ -114,14 +114,6 @@ const Dashboard = () => {
             icon={Activity}
             color="orange"
           />
-          {systemCosts && (
-            <MetricsCard
-              title="Total Cost (24h)"
-              value={`$${systemCosts.totalSystemCost.toFixed(4)}`}
-              icon={DollarSign}
-              color="red"
-            />
-          )}
         </div>
       )}
 

@@ -11,7 +11,7 @@
 8. [WebSocket Communication](#websocket-communication)
 9. [Scaling & Performance](#scaling--performance)
 10. [Security Considerations](#security-considerations)
-11. [Deployment](#deployment)
+
 
 ---
 
@@ -635,29 +635,6 @@ cd ..
 npm start
 ```
 
-### Docker Deployment
-```dockerfile
-FROM node:18-alpine
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-RUN cd client && npm ci && npm run build
-
-EXPOSE 5000
-CMD ["npm", "start"]
-```
-
-### Monitoring & Logging
-- **Console Logging**: Development debugging
-- **Error Tracking**: Unhandled exceptions
-- **Performance Monitoring**: Execution metrics
-- **Health Checks**: System status endpoints
-
----
-
 ## Database Queries & Aggregations
 
 ### Common Queries
@@ -778,4 +755,4 @@ if (DEBUG) {
 
 ---
 
-This documentation provides a comprehensive overview of the S3-for-Compute system architecture, implementation details, and operational procedures. For specific implementation questions or advanced configurations, refer to the source code or contact the development team.
+This documentation provides a comprehensive overview of the S3-for-Compute system architecture, implementation details, and operational procedures. For specific implementation questions or advanced configurations, refer to the source code.

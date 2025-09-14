@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Play, Square, Zap, BarChart3 } from 'lucide-react';
-import { functionsAPI } from '../services/api';
+import { Play, Square, Zap, BarChart3, DollarSign } from 'lucide-react';
+import { functionsAPI, costsAPI } from '../services/api';
 
 const LoadTester = ({ functions, onTestComplete }) => {
   const [isRunning, setIsRunning] = useState(false);
@@ -9,6 +9,7 @@ const LoadTester = ({ functions, onTestComplete }) => {
   const [selectedFunction, setSelectedFunction] = useState('');
   const [concurrentRequests, setConcurrentRequests] = useState(20);
   const [testDuration, setTestDuration] = useState(30); // seconds
+  const [costEstimate, setCostEstimate] = useState(null);
 
   const runLoadTest = async () => {
     if (!selectedFunction) return;
@@ -26,21 +27,43 @@ const LoadTester = ({ functions, onTestComplete }) => {
       failed: 0,
       errors: [],
       responseTimes: [],
-      scalingEvents: []
+      scalingEvents: [],
+      costs: []
     };
 
     // Create concurrent requests
     const createRequest = async (requestId) => {
       try {
         const requestStart = Date.now();
-        await functionsAPI.execute(selectedFunction, { 
+        const response = await functionsAPI.execute(selectedFunction, { 
           testId: requestId,
           timestamp: new Date().toISOString()
         });
         const requestEnd = Date.now();
+        const duration = requestEnd - requestStart;
         
         results_data.completed++;
-        results_data.responseTimes.push(requestEnd - requestStart);
+        results_data.responseTimes.push(duration);
+        
+        // Estimate cost for this execution
+        try {
+          const costResponse = await costsAPI.estimateCost(selectedFunction, { 
+            testId: requestId 
+          }, duration);
+          results_data.costs.push({
+            requestId,
+            cost: costResponse.data.data,
+            duration
+          });
+        } catch (costError) {
+          console.warn('Cost estimation failed:', costError);
+          // Use default cost estimation if API fails
+          results_data.costs.push({
+            requestId,
+            cost: { totalCost: 0.0001 }, // Default minimal cost
+            duration
+          });
+        }
       } catch (error) {
         results_data.failed++;
         results_data.errors.push({
@@ -81,13 +104,21 @@ const LoadTester = ({ functions, onTestComplete }) => {
       ? (results_data.completed / results_data.total) * 100 
       : 0;
 
+    // Calculate total cost
+    const totalCost = results_data.costs.reduce((sum, cost) => sum + (cost.cost.totalCost || 0), 0);
+    const avgCostPerRequest = results_data.costs.length > 0 ? totalCost / results_data.costs.length : 0;
+    const costPerSecond = totalCost / testDuration;
+
     const testResults = {
       ...results_data,
       avgResponseTime: Math.round(avgResponseTime),
       successRate: Math.round(successRate * 100) / 100,
       testDuration: testDuration,
       concurrentRequests: concurrentRequests,
-      requestsPerSecond: Math.round(results_data.total / testDuration * 100) / 100
+      requestsPerSecond: Math.round(results_data.total / testDuration * 100) / 100,
+      totalCost: parseFloat(totalCost.toFixed(6)),
+      avgCostPerRequest: parseFloat(avgCostPerRequest.toFixed(6)),
+      costPerSecond: parseFloat(costPerSecond.toFixed(6))
     };
 
     setResults(testResults);
@@ -105,6 +136,19 @@ const LoadTester = ({ functions, onTestComplete }) => {
   };
 
   const activeFunctions = functions.filter(f => f.status === 'active');
+
+  // Calculate cost estimate when parameters change
+  React.useEffect(() => {
+    if (selectedFunction && concurrentRequests && testDuration) {
+      // Estimate cost based on average response time and parameters
+      const estimatedRequests = concurrentRequests * (testDuration / 10); // Rough estimate
+      const estimatedCost = estimatedRequests * 0.0001; // Basic tier cost estimate
+      setCostEstimate({
+        estimatedRequests: Math.round(estimatedRequests),
+        estimatedCost: parseFloat(estimatedCost.toFixed(6))
+      });
+    }
+  }, [selectedFunction, concurrentRequests, testDuration]);
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -172,6 +216,29 @@ const LoadTester = ({ functions, onTestComplete }) => {
             </div>
           </div>
 
+          {/* Cost Estimate */}
+          {costEstimate && selectedFunction && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                <h4 className="text-sm font-semibold text-blue-900">Estimated Test Cost</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-blue-700">Estimated Requests:</span>
+                  <span className="ml-2 font-medium">{costEstimate.estimatedRequests}</span>
+                </div>
+                <div>
+                  <span className="text-blue-700">Estimated Cost:</span>
+                  <span className="ml-2 font-medium">${costEstimate.estimatedCost}</span>
+                </div>
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                * This is a rough estimate. Actual costs may vary based on execution time and pricing tier.
+              </p>
+            </div>
+          )}
+
           {/* Progress Bar */}
           {isRunning && (
             <div>
@@ -232,6 +299,41 @@ const LoadTester = ({ functions, onTestComplete }) => {
                   <div className="text-2xl font-bold text-purple-600">{results.successRate}%</div>
                   <div className="text-sm text-purple-800">Success Rate</div>
                 </div>
+              </div>
+
+              {/* Cost Results */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <DollarSign className="h-5 w-5 text-yellow-600" />
+                  <h5 className="text-lg font-semibold text-yellow-900">Test Cost Analysis</h5>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white p-3 rounded border">
+                    <div className="text-2xl font-bold text-yellow-600">${results.totalCost}</div>
+                    <div className="text-sm text-yellow-800">Total Cost</div>
+                  </div>
+                  <div className="bg-white p-3 rounded border">
+                    <div className="text-lg font-semibold text-yellow-600">${results.avgCostPerRequest}</div>
+                    <div className="text-sm text-yellow-800">Avg Cost per Request</div>
+                  </div>
+                  <div className="bg-white p-3 rounded border">
+                    <div className="text-lg font-semibold text-yellow-600">${results.costPerSecond}</div>
+                    <div className="text-sm text-yellow-800">Cost per Second</div>
+                  </div>
+                </div>
+                {costEstimate && (
+                  <div className="mt-3 text-sm text-yellow-700">
+                    <span>Estimated vs Actual: </span>
+                    <span className="font-medium">
+                      ${costEstimate.estimatedCost} → ${results.totalCost}
+                      {costEstimate.estimatedCost > 0 && (
+                        <span className="ml-2">
+                          ({((results.totalCost - costEstimate.estimatedCost) / costEstimate.estimatedCost * 100).toFixed(1)}% difference)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

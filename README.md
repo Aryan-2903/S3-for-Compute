@@ -120,6 +120,8 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 - Select a function and configure test parameters
 - Run concurrent requests (up to 100 concurrent)
 - Set test duration (10-300 seconds)
+- **View cost estimates before testing**
+- **See detailed cost analysis after testing**
 - Observe scaling events in real-time
 - Monitor cost impact of load testing
 
@@ -146,9 +148,11 @@ The platform includes several pre-built sample functions:
 ### Scaling Demo
 1. Go to Monitoring page
 2. Use Load Tester with 20+ concurrent requests
-3. Watch the Instance Scaling chart show scaling events
-4. Observe the Scaling Events Timeline for detailed scaling history
-5. Monitor real-time updates in the dashboard
+3. **View cost estimate before starting the test**
+4. Watch the Instance Scaling chart show scaling events
+5. **Check the detailed cost analysis in test results**
+6. Observe the Scaling Events Timeline for detailed scaling history
+7. Monitor real-time updates in the dashboard
 
 ### Cost Analysis Demo
 1. Execute several functions
@@ -267,8 +271,10 @@ The platform includes several pre-built sample functions:
 2. Select a function from the Load Tester
 3. Configure concurrent requests (default: 20)
 4. Set test duration (default: 30 seconds)
-5. Click "Start Load Test"
-6. Observe scaling events in real-time
+5. **View cost estimate before starting the test**
+6. Click "Start Load Test"
+7. **Check detailed cost analysis in test results**
+8. Observe scaling events in real-time
 
 ### Manual Testing
 1. Upload a function

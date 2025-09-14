@@ -1,42 +1,54 @@
-# S3 for Compute - Infinitely Scalable Serverless Platform
+# S3 for Compute - Serverless Function Execution Platform
 
-E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where developers can upload JavaScript functions and the system automatically handles execution, scaling, retries, and monitoring.
+A comprehensive serverless compute platform where developers can upload JavaScript functions and the system automatically handles execution, scaling, cost calculation, and monitoring with real-time updates.
 
-##  Features
+## Features
 
 ### Core Functionality
-- **Function Upload & Management**: Upload JavaScript functions with metadata and version control
+- **Function Upload & Management**: Upload JavaScript functions with metadata and configuration
 - **Automatic Execution**: Execute functions with input parameters in isolated worker threads
-- **Intelligent Auto-Scaling**: Dynamic scaling based on execution queue length (scale up at 5+ pending, scale down at <2 pending)
+- **Intelligent Auto-Scaling**: Dynamic scaling based on execution queue length and load
 - **Fault Tolerance**: Automatic retries with exponential backoff (2s, 4s, 8s delays)
 - **Real-time Monitoring**: Live metrics and scaling events via WebSocket
-- **Load Testing**: Built-in load testing with enhanced cost estimation UI to demonstrate scaling behavior
-- **Cost Monitoring**: Comprehensive cost tracking and analysis with pricing tiers and real-time cost calculation
+- **Load Testing**: Built-in load testing with cost estimation and analysis
+- **Cost Monitoring**: Comprehensive cost tracking with tiered pricing and real-time calculation
+
+### Advanced Features
+- **Multi-tier Pricing**: Automatic tier determination based on function characteristics
+- **Real-time Cost Calculation**: Per-execution cost breakdown with detailed analysis
+- **Cost Trends Analysis**: Historical cost data with hourly, daily, and monthly views
+- **Function-specific Cost Tracking**: Individual function cost monitoring and optimization
+- **System-wide Cost Overview**: Complete platform cost analysis and reporting
+- **Pre-execution Cost Estimation**: Cost prediction before function execution
+- **Load Testing Cost Analysis**: Detailed cost breakdown for load testing scenarios
 
 ### Technical Features
 - **Worker Threads**: Safe function execution in isolated worker threads
 - **MongoDB Storage**: Persistent storage for functions, executions, scaling events, and costs
 - **WebSocket Updates**: Real-time monitoring dashboard updates
 - **Responsive UI**: Modern React interface with TailwindCSS
-- **Charts & Visualizations**: Interactive charts showing scaling, execution metrics, and cost trends
-- **Multi-tier Pricing**: Basic, Standard, Premium, and Enterprise pricing tiers
-- **Scaling Events Timeline**: Scrollable visual timeline of all scaling events with reasons
+- **Interactive Charts**: Execution history, scaling events, and cost trend visualizations
+- **Automatic Tier Detection**: Smart pricing tier assignment based on code complexity
+- **Scaling Events Timeline**: Visual timeline of all scaling events with detailed reasons
 
-##  Tech Stack
+## Tech Stack
 
 ### Backend
 - **Node.js/Express.js**: REST API server
-- **MongoDB**: Database for functions, executions, and scaling events
+- **MongoDB**: Database for functions, executions, scaling events, and costs
 - **WebSockets**: Real-time communication
 - **Worker Threads**: Safe function execution
+- **Mongoose**: MongoDB object modeling
 
 ### Frontend
 - **React.js**: User interface
-- **TailwindCSS**: Styling
+- **React Router**: Client-side routing
+- **TailwindCSS**: Styling framework
 - **Recharts**: Data visualization
-- **Lucide React**: Icons
+- **Lucide React**: Icon library
+- **Axios**: HTTP client
 
-##  Installation
+## Installation
 
 ### Prerequisites
 - Node.js (v14 or higher)
@@ -65,7 +77,7 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 
 4. **Set up environment variables**
    ```bash
-   cp env.example .env
+   cp .env.example .env
    ```
    Edit `.env` with your MongoDB connection string:
    ```
@@ -91,7 +103,7 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
    - Backend API: http://localhost:5000
    - WebSocket: ws://localhost:5000
 
-##  Usage
+## Usage
 
 ### 1. Upload Functions
 - Navigate to the Functions page
@@ -103,6 +115,7 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 - Click "Run" on any active function
 - Functions execute with test input by default
 - Monitor execution status in real-time
+- View cost calculation for each execution
 
 ### 3. Monitor Performance
 - Visit the Monitoring page for real-time metrics
@@ -115,17 +128,35 @@ E6data X IIT BHU hackathon MVP demonstrating a serverless compute platform where
 - View cost trends and pricing tier information
 - Analyze function-specific and system-wide costs
 - Track cost optimization opportunities
+- Monitor real-time cost updates
 
 ### 5. Load Testing
 - Select a function and configure test parameters
 - Run concurrent requests (up to 100 concurrent)
 - Set test duration (10-300 seconds)
-- **View cost estimates before testing**
-- **See detailed cost analysis after testing**
+- View cost estimates before testing
+- See detailed cost analysis after testing
 - Observe scaling events in real-time
 - Monitor cost impact of load testing
 
-##  Sample Functions
+## Pricing Tiers
+
+The platform uses automatic tier determination based on function characteristics:
+
+| Tier | Code Length | Timeout | Price/100ms | Memory | CPU | Description |
+|------|-------------|---------|-------------|--------|-----|-------------|
+| **Basic** | ≤100 chars | ≤60s | $0.0001 | 128MB | 0.1 cores | Lightweight functions |
+| **Standard** | 101-5000 chars | ≤60s | $0.0003 | 512MB | 0.5 cores | Standard functions |
+| **Premium** | 5001-10000 chars | ≤60s | $0.0008 | 1GB | 1.0 cores | High-performance functions |
+| **Enterprise** | >10000 chars | any | $0.002 | 2GB | 2.0 cores | Enterprise-grade functions |
+
+### Additional Cost Factors
+- **Cold Start**: $0.00005 per cold start
+- **Retry Attempts**: $0.00002 per retry
+- **Data Transfer**: $0.000001 per KB
+- **Scaling Events**: $0.0001 per scaling event
+
+## Sample Functions
 
 The platform includes several pre-built sample functions:
 
@@ -133,35 +164,9 @@ The platform includes several pre-built sample functions:
 2. **String Reverser**: Reverse input text
 3. **Array Sum**: Sum all numbers in an array
 4. **Prime Checker**: Check if a number is prime
+5. **Factorial Calculator**: Calculate factorial of a number
 
-##  Demo Instructions
-
-### Quick Start Demo
-1. **Start the Platform**: Run `npm start` to start the server
-2. **Access the UI**: Open http://localhost:3000 in your browser
-3. **Upload a Function**: Go to Functions page and upload a sample function
-4. **Execute Functions**: Click "Run" to execute functions and see real-time updates
-5. **Monitor Scaling**: Visit Monitoring page to see scaling events and metrics
-6. **Load Test**: Use the Load Tester to trigger auto-scaling behavior
-7. **Cost Analysis**: Check Cost Monitoring page for detailed cost breakdown
-
-### Scaling Demo
-1. Go to Monitoring page
-2. Use Load Tester with 20+ concurrent requests
-3. **View cost estimate before starting the test**
-4. Watch the Instance Scaling chart show scaling events
-5. **Check the detailed cost analysis in test results**
-6. Observe the Scaling Events Timeline for detailed scaling history
-7. Monitor real-time updates in the dashboard
-
-### Cost Analysis Demo
-1. Execute several functions
-2. Go to Cost Monitoring page
-3. View cost trends and breakdown
-4. Analyze pricing tier information
-5. Track system-wide cost metrics
-
-##  API Endpoints
+## API Endpoints
 
 ### Functions
 - `POST /api/functions` - Create function
@@ -180,16 +185,14 @@ The platform includes several pre-built sample functions:
 ### Costs
 - `GET /api/costs/pricing` - Get pricing tiers information
 - `POST /api/costs/estimate` - Estimate function execution cost
-- `GET /api/costs/function/:id` - Get function-specific costs
 - `GET /api/costs/system` - Get system-wide cost analysis
-- `GET /api/costs/executions` - Get execution cost details
 - `GET /api/costs/trends` - Get cost trends over time
 - `GET /api/costs/breakdown` - Get detailed cost breakdown
 
 ### WebSocket
 - `ws://localhost:5000` - Real-time updates for scaling events, executions, and monitoring
 
-##  Architecture
+## Architecture
 
 ### Database Schema
 
@@ -219,7 +222,19 @@ The platform includes several pre-built sample functions:
   duration: Number,
   error: String,
   retryCount: Number,
-  instanceId: String
+  instanceId: String,
+  cost: {
+    tier: String,
+    baseCost: Number,
+    coldStartCost: Number,
+    retryCost: Number,
+    dataTransferCost: Number,
+    totalCost: Number,
+    resourceUsage: {
+      memoryMB: Number,
+      cpuCores: Number
+    }
+  }
 }
 ```
 
@@ -235,45 +250,23 @@ The platform includes several pre-built sample functions:
 }
 ```
 
-**Costs Collection**
-```javascript
-{
-  _id: ObjectId,
-  executionId: ObjectId,
-  functionId: ObjectId,
-  tier: String, // 'basic' | 'standard' | 'premium' | 'enterprise'
-  baseCost: Number,
-  coldStartCost: Number,
-  retryCost: Number,
-  dataTransferCost: Number,
-  totalCost: Number,
-  duration: Number,
-  resourceUsage: {
-    memoryMB: Number,
-    cpuCores: Number
-  },
-  timestamp: Date
-}
-```
-
 ### Scaling Logic
-- **Scale Up**: When >5 executions are queued (optimized for better responsiveness)
-- **Scale Down**: When <2 executions for 30 seconds
+- **Scale Up**: When >10 executions are queued
+- **Scale Down**: When <3 executions for 30 seconds
 - **Max Instances**: 10 (configurable)
 - **Min Instances**: 1 (always maintains base capacity)
 - **Retry Logic**: Up to 3 retries with exponential backoff (2s, 4s, 8s)
-- **Auto-initialization**: Creates sample scaling events on first startup for demonstration
 
-##  Testing
+## Testing
 
 ### Load Testing
 1. Go to the Monitoring page
 2. Select a function from the Load Tester
 3. Configure concurrent requests (default: 20)
 4. Set test duration (default: 30 seconds)
-5. **View cost estimate before starting the test**
+5. View cost estimate before starting the test
 6. Click "Start Load Test"
-7. **Check detailed cost analysis in test results**
+7. Check detailed cost analysis in test results
 8. Observe scaling events in real-time
 
 ### Manual Testing
@@ -281,8 +274,9 @@ The platform includes several pre-built sample functions:
 2. Execute it multiple times
 3. Monitor the execution logs
 4. Check scaling behavior in the monitoring dashboard
+5. Analyze costs in the Cost Monitoring page
 
-##  Deployment
+## Deployment
 
 ### Production Setup
 1. Set `NODE_ENV=production`
@@ -295,7 +289,7 @@ The platform includes several pre-built sample functions:
 - `NODE_ENV`: Environment (development/production)
 - `PORT`: Server port (default: 5000)
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -314,5 +308,12 @@ PORT=5001
 ```
 
 
+## Documentation
 
-
+For detailed technical documentation, see [TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md) which includes:
+- Complete API reference
+- Database schema details
+- Cost calculation formulas
+- Architecture diagrams
+- Security considerations
+- Performance optimization guidelines

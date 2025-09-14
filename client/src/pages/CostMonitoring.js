@@ -274,7 +274,6 @@ const CostMonitoring = () => {
               <h4 className="text-sm font-medium text-blue-900">Tier Information</h4>
               <p className="text-sm text-blue-700 mt-1">
                 The tiers shown below are determined by actual function characteristics (code length, timeout, etc.) during execution. 
-                Load testing tier selection is for testing purposes only and doesn't affect actual execution costs.
               </p>
             </div>
           </div>
